@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Alert, FlatList, Text, TouchableOpacity, View } from 'react-native';
 import { useAppStore, useIsLoading, useRideHistory } from '../hooks/useAppStore';
+import { useAuth } from '../hooks/useAuth';
 import { rideTrackerService } from '../services/rideTracker';
 import { RideRecord } from '../types/ride';
 import { ThemedText } from './ThemedText';
@@ -106,6 +107,7 @@ export function RideHistory() {
   const rideHistory = useRideHistory();
   const isLoading = useIsLoading();
   const { loadRideHistory, deleteRide } = useAppStore();
+  const { user } = useAuth();
 
   useEffect(() => {
     loadRideHistory();
@@ -129,6 +131,22 @@ export function RideHistory() {
     </View>
   );
 
+  const renderHeader = () => (
+    <View className="mb-6">
+      {/* User status */}
+      {user?.email && (
+        <View className="flex-row items-center justify-center mb-4">
+          <View className="w-2 h-2 bg-blue-500 rounded-full mr-2" />
+          <ThemedText type="default" className="text-blue-600 dark:text-blue-400 text-sm">
+            Your personal ride history • {user.email.split('@')[0]}
+          </ThemedText>
+        </View>
+      )}
+      
+      {renderSummaryStats()}
+    </View>
+  );
+
   const renderSummaryStats = () => {
     if (rideHistory.length === 0) return null;
 
@@ -137,7 +155,7 @@ export function RideHistory() {
     const avgSpeed = totalDuration > 0 ? (totalDistance / totalDuration) * 3600 : 0;
 
     return (
-      <View className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 mb-6">
+      <View className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4">
         <ThemedText type="subtitle" className="text-center mb-3 text-blue-800 dark:text-blue-200">
           Total Stats
         </ThemedText>
@@ -187,7 +205,7 @@ export function RideHistory() {
         renderItem={({ item }) => (
           <RideHistoryItem ride={item} onDelete={handleDeleteRide} />
         )}
-        ListHeaderComponent={renderSummaryStats}
+        ListHeaderComponent={renderHeader}
         ListEmptyComponent={renderEmptyState}
         contentContainerStyle={{
           padding: 16,

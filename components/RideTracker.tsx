@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Alert, Text, TouchableOpacity, View } from 'react-native';
 import { useAppStore, useCurrentRide } from '../hooks/useAppStore';
+import { useAuth } from '../hooks/useAuth';
 import { rideTrackerService } from '../services/rideTracker';
 import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
@@ -8,6 +9,7 @@ import { ThemedView } from './ThemedView';
 export function RideTracker() {
   const currentRide = useCurrentRide();
   const { startRideTracking, stopRideTracking, isLoading } = useAppStore();
+  const { user } = useAuth();
   const [displayTime, setDisplayTime] = useState('00:00');
 
   // Update display time every second when tracking
@@ -56,6 +58,16 @@ export function RideTracker() {
     <ThemedView className="flex-1 p-6">
       {/* Header */}
       <View className="items-center mb-8">
+        {/* User greeting */}
+        {user?.email && (
+          <View className="flex-row items-center mb-4">
+            <View className="w-2 h-2 bg-green-500 rounded-full mr-2" />
+            <ThemedText type="default" className="text-green-600 dark:text-green-400 text-sm">
+              Signed in as {user.email.split('@')[0]}
+            </ThemedText>
+          </View>
+        )}
+        
         <ThemedText type="title" className="text-center mb-2">
           {currentRide.isTracking ? 'Ride in Progress' : 'Ready to Ride'}
         </ThemedText>

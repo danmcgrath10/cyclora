@@ -4,6 +4,8 @@ export interface RideRecord {
   distance: number; // Distance in kilometers (float)
   duration: number; // Duration in seconds (integer)
   averageSpeed: number; // Average speed in km/h (float)
+  maxSpeed?: number; // Maximum speed in km/h (float)
+  routePoints?: LocationPoint[]; // GPS route for map visualization
   aiSummary?: string; // AI-generated summary (optional, added after ride completion)
   createdAt: Date;
   updatedAt: Date;

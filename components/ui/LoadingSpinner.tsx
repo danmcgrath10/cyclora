@@ -9,7 +9,7 @@ interface LoadingSpinnerProps {
 
 export function LoadingSpinner({ 
   size = 'large', 
-  color = '#3B82F6', 
+  color = '#FF6B35', 
   message = 'Loading...', 
   className = '' 
 }: LoadingSpinnerProps) {
@@ -27,7 +27,7 @@ export function LoadingSpinner({
 
 export function InlineLoadingSpinner({ 
   size = 'small', 
-  color = '#3B82F6', 
+  color = '#FF6B35', 
   className = '' 
 }: Omit<LoadingSpinnerProps, 'message'>) {
   return (

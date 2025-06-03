@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { aiSummaryService } from '../services/aiSummary';
-import { rideStorageService } from '../services/rideStorage';
+import { hybridRideStorageService } from '../services/hybridRideStorage';
 import { rideTrackerService } from '../services/rideTracker';
 import { RideRecord, RideTrackingState } from '../types/ride';
 
@@ -15,7 +15,14 @@ interface AppState {
   
   // Ride tracking state
   currentRide: RideTrackingState;
-  rideHistory: RideRecord[];
+  
+  // Hybrid ride history state
+  localRides: RideRecord[];
+  remoteRides: RideRecord[];
+  hasMoreRemoteRides: boolean;
+  nextRemoteCursor: string | null;
+  totalRideCount: number;
+  isLoadingMore: boolean;
   
   // Actions
   toggleDarkMode: () => void;
@@ -28,9 +35,11 @@ interface AppState {
   // Ride actions
   updateCurrentRide: (rideState: RideTrackingState) => void;
   loadRideHistory: () => Promise<void>;
+  loadMoreRides: () => Promise<void>;
   startRideTracking: () => Promise<boolean>;
   stopRideTracking: () => Promise<void>;
   deleteRide: (id: string) => Promise<void>;
+  forceSync: () => Promise<void>;
 }
 
 interface Notification {
@@ -54,7 +63,12 @@ export const useAppStore = create<AppState>((set, get) => ({
     currentSpeed: 0,
     averageSpeed: 0,
   },
-  rideHistory: [],
+  localRides: [],
+  remoteRides: [],
+  hasMoreRemoteRides: false,
+  nextRemoteCursor: null,
+  totalRideCount: 0,
+  isLoadingMore: false,
 
   // Actions
   toggleDarkMode: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
@@ -90,9 +104,17 @@ export const useAppStore = create<AppState>((set, get) => ({
   loadRideHistory: async () => {
     try {
       set({ isLoading: true });
-      await rideStorageService.initializeDatabase();
-      const rides = await rideStorageService.getAllRides();
-      set({ rideHistory: rides });
+      await hybridRideStorageService.initialize();
+      
+      const hybridData = await hybridRideStorageService.getPaginatedRides();
+      
+      set({
+        localRides: hybridData.localRides,
+        remoteRides: hybridData.remoteRides,
+        hasMoreRemoteRides: hybridData.hasMoreRemote,
+        nextRemoteCursor: hybridData.nextCursor,
+        totalRideCount: hybridData.totalCount,
+      });
     } catch (error) {
       console.error('Failed to load ride history:', error);
       get().addNotification({
@@ -102,6 +124,37 @@ export const useAppStore = create<AppState>((set, get) => ({
       });
     } finally {
       set({ isLoading: false });
+    }
+  },
+
+  loadMoreRides: async () => {
+    const state = get();
+    if (state.isLoadingMore || !state.hasMoreRemoteRides) {
+      return;
+    }
+
+    try {
+      set({ isLoadingMore: true });
+      
+      const hybridData = await hybridRideStorageService.getPaginatedRides(
+        state.nextRemoteCursor || undefined
+      );
+      
+      set({
+        remoteRides: [...state.remoteRides, ...hybridData.remoteRides],
+        hasMoreRemoteRides: hybridData.hasMoreRemote,
+        nextRemoteCursor: hybridData.nextCursor,
+        totalRideCount: hybridData.totalCount,
+      });
+    } catch (error) {
+      console.error('Failed to load more rides:', error);
+      get().addNotification({
+        title: 'Error',
+        message: 'Failed to load more rides',
+        type: 'error',
+      });
+    } finally {
+      set({ isLoadingMore: false });
     }
   },
 
@@ -156,24 +209,30 @@ export const useAppStore = create<AppState>((set, get) => ({
       
       // Save the ride
       if (finalState.currentDistance > 0 && finalState.currentDuration > 0) {
-        const rideData = {
-          timestamp: new Date().toISOString(),
-          distance: finalState.currentDistance,
-          duration: finalState.currentDuration,
-          averageSpeed: finalState.averageSpeed,
+        // Get complete ride data including route points and max speed
+        const rideData = rideTrackerService.getRideData();
+        
+        const rideRecord = {
+          timestamp: rideData.startTime?.toISOString() || new Date().toISOString(),
+          distance: rideData.distance,
+          duration: rideData.duration,
+          averageSpeed: rideData.averageSpeed,
+          maxSpeed: rideData.maxSpeed,
+          routePoints: rideData.routePoints,
         };
 
-        const rideId = await rideStorageService.saveRide(rideData);
+        // Save using hybrid storage (local first, then auto-migration)
+        const rideId = await hybridRideStorageService.saveRide(rideRecord);
         
         // Generate AI summary
         try {
           const summary = await aiSummaryService.generateSummaryWithQueue(rideId, {
-            distance: rideData.distance,
-            duration: rideData.duration,
-            averageSpeed: rideData.averageSpeed,
+            distance: rideRecord.distance,
+            duration: rideRecord.duration,
+            averageSpeed: rideRecord.averageSpeed,
           });
           
-          await rideStorageService.updateRideAISummary(rideId, summary);
+          await hybridRideStorageService.updateRideAISummary(rideId, summary);
           
           get().addNotification({
             title: 'Ride Completed!',
@@ -189,7 +248,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         
         get().addNotification({
           title: 'Ride Saved',
-          message: `${rideTrackerService.formatDistance(rideData.distance)} ride saved successfully`,
+          message: `${rideTrackerService.formatDistance(rideRecord.distance)} ride saved successfully`,
           type: 'success',
         });
       } else {
@@ -199,17 +258,6 @@ export const useAppStore = create<AppState>((set, get) => ({
           type: 'info',
         });
       }
-
-      // Reset current ride state
-      set({
-        currentRide: {
-          isTracking: false,
-          currentDistance: 0,
-          currentDuration: 0,
-          currentSpeed: 0,
-          averageSpeed: 0,
-        },
-      });
     } catch (error) {
       console.error('Failed to stop ride tracking:', error);
       get().addNotification({
@@ -224,7 +272,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   deleteRide: async (id: string) => {
     try {
-      await rideStorageService.deleteRide(id);
+      await hybridRideStorageService.deleteRide(id);
       await get().loadRideHistory();
       get().addNotification({
         title: 'Ride Deleted',
@@ -240,12 +288,41 @@ export const useAppStore = create<AppState>((set, get) => ({
       });
     }
   },
+
+  forceSync: async () => {
+    try {
+      set({ isLoading: true });
+      await hybridRideStorageService.forceFullMigration();
+      await get().loadRideHistory();
+      
+      get().addNotification({
+        title: 'Sync Complete',
+        message: 'All rides have been synced to cloud',
+        type: 'success',
+      });
+    } catch (error) {
+      console.error('Failed to force sync:', error);
+      get().addNotification({
+        title: 'Sync Failed',
+        message: 'Failed to sync rides to cloud',
+        type: 'error',
+      });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
 }));
 
-// Selectors for better performance
+// Optimized selectors that prevent unnecessary re-renders
 export const useIsDarkMode = () => useAppStore((state) => state.isDarkMode);
 export const useUserName = () => useAppStore((state) => state.userName);
 export const useIsLoading = () => useAppStore((state) => state.isLoading);
 export const useNotifications = () => useAppStore((state) => state.notifications);
 export const useCurrentRide = () => useAppStore((state) => state.currentRide);
-export const useRideHistory = () => useAppStore((state) => state.rideHistory); 
+
+// Individual ride data selectors
+export const useLocalRides = () => useAppStore((state) => state.localRides);
+export const useRemoteRides = () => useAppStore((state) => state.remoteRides);
+export const useHasMoreRides = () => useAppStore((state) => state.hasMoreRemoteRides);
+export const useIsLoadingMore = () => useAppStore((state) => state.isLoadingMore);
+export const useTotalRideCount = () => useAppStore((state) => state.totalRideCount); 

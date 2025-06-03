@@ -97,84 +97,97 @@ export default function AuthForm() {
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="flex-1 justify-center px-6 py-12 bg-white dark:bg-gray-900">
-          <View className="mb-8">
+        <View className="flex-1 justify-center px-6 py-12 bg-gray-50 dark:bg-gray-900">
+          {/* Branding Header */}
+          <View className="items-center mb-12">
+            <View className="w-20 h-20 bg-orange-500 rounded-full items-center justify-center mb-6">
+              <Text className="text-3xl">🚴‍♀️</Text>
+            </View>
             <Text className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-2">
-              {isSignUp ? 'Create Account' : 'Welcome Back'}
+              {isSignUp ? 'Join Cyclora' : 'Welcome Back'}
             </Text>
             <Text className="text-base text-center text-gray-600 dark:text-gray-400">
               {isSignUp 
-                ? 'Sign up to start tracking your rides' 
-                : 'Sign in to your account'
+                ? 'Start tracking your cycling journey' 
+                : 'Continue your cycling adventure'
               }
             </Text>
           </View>
 
-          <View className="space-y-4">
-            <View>
-              <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Email
-              </Text>
-              <TextInput
-                value={email}
-                onChangeText={setEmail}
-                placeholder="Enter your email"
-                placeholderTextColor="#9CA3AF"
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="email-address"
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-400"
-              />
-            </View>
-
-            <View>
-              <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Password
-              </Text>
-              <TextInput
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Enter your password"
-                placeholderTextColor="#9CA3AF"
-                secureTextEntry
-                autoCapitalize="none"
-                autoCorrect={false}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-400"
-              />
-            </View>
-
-            <TouchableOpacity
-              onPress={handleSubmit}
-              disabled={loading}
-              className={`w-full py-3 rounded-lg ${
-                loading 
-                  ? 'bg-gray-400 dark:bg-gray-600' 
-                  : 'bg-blue-600 dark:bg-blue-500'
-              } flex-row justify-center items-center`}
-            >
-              {loading ? (
-                <ActivityIndicator color="white" size="small" />
-              ) : (
-                <Text className="text-white font-semibold text-base">
-                  {isSignUp ? 'Create Account' : 'Sign In'}
+          {/* Form */}
+          <View className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-sm">
+            <View className="space-y-6">
+              <View>
+                <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                  Email Address
                 </Text>
-              )}
-            </TouchableOpacity>
+                <TextInput
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="Enter your email"
+                  placeholderTextColor="#9CA3AF"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="email-address"
+                  className="w-full pb-3 border-b border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white text-lg"
+                />
+              </View>
 
-            <View className="flex-row justify-center items-center mt-6">
-              <Text className="text-gray-600 dark:text-gray-400">
-                {isSignUp ? 'Already have an account?' : "Don't have an account?"}
-              </Text>
+              <View>
+                <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                  Password
+                </Text>
+                <TextInput
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="Enter your password"
+                  placeholderTextColor="#9CA3AF"
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  className="w-full pb-3 border-b border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white text-lg"
+                />
+                {isSignUp && (
+                  <Text className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    Minimum 6 characters
+                  </Text>
+                )}
+              </View>
+
               <TouchableOpacity
-                onPress={() => setIsSignUp(!isSignUp)}
+                onPress={handleSubmit}
                 disabled={loading}
-                className="ml-2"
+                className={`w-full py-4 rounded-xl ${
+                  loading 
+                    ? 'bg-gray-400 dark:bg-gray-600' 
+                    : 'bg-orange-500 dark:bg-orange-600'
+                } flex-row justify-center items-center shadow-lg mt-8`}
               >
-                <Text className="text-blue-600 dark:text-blue-400 font-semibold">
-                  {isSignUp ? 'Sign In' : 'Sign Up'}
-                </Text>
+                {loading ? (
+                  <ActivityIndicator color="white" size="small" />
+                ) : (
+                  <Text className="text-white font-bold text-lg">
+                    {isSignUp ? 'Create Account' : 'Sign In'}
+                  </Text>
+                )}
               </TouchableOpacity>
             </View>
+          </View>
+
+          {/* Toggle Sign Up/In */}
+          <View className="flex-row justify-center items-center mt-8">
+            <Text className="text-gray-600 dark:text-gray-400">
+              {isSignUp ? 'Already have an account?' : 'New to Cyclora?'}
+            </Text>
+            <TouchableOpacity
+              onPress={() => setIsSignUp(!isSignUp)}
+              disabled={loading}
+              className="ml-2"
+            >
+              <Text className="text-orange-500 dark:text-orange-400 font-semibold">
+                {isSignUp ? 'Sign In' : 'Sign Up'}
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>

@@ -148,7 +148,7 @@ export default function Avatar({
         )}
 
         {editable && !uploading && (
-          <View className="absolute bottom-0 right-0 bg-blue-600 rounded-full p-2">
+          <View className="absolute bottom-0 right-0 bg-orange-500 rounded-full p-2">
             <Text className="text-white text-xs">📷</Text>
           </View>
         )}
@@ -158,9 +158,9 @@ export default function Avatar({
         <TouchableOpacity
           onPress={uploadAvatar}
           disabled={uploading}
-          className="mt-4 px-4 py-2 bg-blue-600 dark:bg-blue-500 rounded-lg"
+          className="mt-4 px-6 py-3 bg-orange-500 dark:bg-orange-600 rounded-xl shadow-sm"
         >
-          <Text className="text-white font-medium">
+          <Text className="text-white font-semibold">
             {uploading ? 'Uploading...' : 'Change Photo'}
           </Text>
         </TouchableOpacity>

@@ -1,5 +1,5 @@
 import React, { Component, ReactNode } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 
 interface Props {
   children: ReactNode;
@@ -36,32 +36,37 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <View className="flex-1 justify-center items-center p-6 bg-white dark:bg-gray-900">
-          <View className="bg-red-50 dark:bg-red-900/20 p-6 rounded-xl border border-red-200 dark:border-red-800 max-w-sm">
-            <Text className="text-red-600 dark:text-red-400 text-xl font-semibold text-center mb-2">
-              🚨 Something went wrong
-            </Text>
+        <View className="flex-1 justify-center items-center p-6 bg-gray-50 dark:bg-gray-900">
+          <View className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg max-w-sm border border-red-200 dark:border-red-800">
+            <View className="items-center mb-6">
+              <View className="w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full items-center justify-center mb-4">
+                <Text className="text-2xl">🚨</Text>
+              </View>
+              <Text className="text-red-600 dark:text-red-400 text-xl font-bold text-center">
+                Something went wrong
+              </Text>
+            </View>
             
-            <Text className="text-red-500 dark:text-red-300 text-sm text-center mb-4">
+            <Text className="text-gray-600 dark:text-gray-400 text-sm text-center mb-6">
               An unexpected error occurred. Please try again.
             </Text>
             
             {__DEV__ && this.state.error && (
-              <View className="bg-red-100 dark:bg-red-900/40 p-3 rounded-lg mb-4">
+              <View className="bg-red-50 dark:bg-red-900/40 p-4 rounded-xl mb-6">
                 <Text className="text-red-700 dark:text-red-300 text-xs font-mono">
                   {this.state.error.message}
                 </Text>
               </View>
             )}
             
-            <Pressable
+            <TouchableOpacity
               onPress={this.handleReset}
-              className="bg-red-600 dark:bg-red-500 px-4 py-2 rounded-lg"
+              className="bg-orange-500 dark:bg-orange-600 px-6 py-4 rounded-xl shadow-sm"
             >
-              <Text className="text-white font-medium text-center">
+              <Text className="text-white font-semibold text-center">
                 Try Again
               </Text>
-            </Pressable>
+            </TouchableOpacity>
           </View>
         </View>
       );

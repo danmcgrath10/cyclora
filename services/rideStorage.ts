@@ -1,6 +1,6 @@
 import * as Crypto from 'expo-crypto';
 import * as SQLite from 'expo-sqlite';
-import { RideRecord } from '../types/ride';
+import { LocationPoint, RideRecord } from '../types/ride';
 
 interface RideRow {
   id: string;
@@ -8,6 +8,8 @@ interface RideRow {
   distance: number;
   duration: number;
   averageSpeed: number;
+  maxSpeed: number | null;
+  routePoints: string | null; // JSON string of LocationPoint[]
   aiSummary: string | null;
   createdAt: string;
   updatedAt: string;
@@ -34,6 +36,8 @@ class RideStorageService {
           distance REAL NOT NULL,
           duration INTEGER NOT NULL,
           averageSpeed REAL NOT NULL,
+          maxSpeed REAL,
+          routePoints TEXT,
           aiSummary TEXT,
           createdAt TEXT NOT NULL,
           updatedAt TEXT NOT NULL
@@ -42,6 +46,19 @@ class RideStorageService {
         CREATE INDEX IF NOT EXISTS idx_rides_timestamp ON rides(timestamp);
         CREATE INDEX IF NOT EXISTS idx_rides_created_at ON rides(createdAt);
       `);
+
+      // Add new columns if they don't exist (for database migration)
+      try {
+        await this.db.execAsync(`ALTER TABLE rides ADD COLUMN maxSpeed REAL;`);
+      } catch (error) {
+        // Column probably already exists
+      }
+      
+      try {
+        await this.db.execAsync(`ALTER TABLE rides ADD COLUMN routePoints TEXT;`);
+      } catch (error) {
+        // Column probably already exists
+      }
     } catch (error) {
       console.error('Failed to initialize database:', error);
       throw error;
@@ -61,10 +78,24 @@ class RideStorageService {
     const now = new Date().toISOString();
 
     try {
+      // Serialize route points to JSON
+      const routePointsJson = rideData.routePoints ? JSON.stringify(rideData.routePoints) : null;
+      
       await db.runAsync(
-        `INSERT INTO rides (id, timestamp, distance, duration, averageSpeed, aiSummary, createdAt, updatedAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [id, rideData.timestamp, rideData.distance, rideData.duration, rideData.averageSpeed, rideData.aiSummary || null, now, now]
+        `INSERT INTO rides (id, timestamp, distance, duration, averageSpeed, maxSpeed, routePoints, aiSummary, createdAt, updatedAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id, 
+          rideData.timestamp, 
+          rideData.distance, 
+          rideData.duration, 
+          rideData.averageSpeed, 
+          rideData.maxSpeed || null,
+          routePointsJson,
+          rideData.aiSummary || null, 
+          now, 
+          now
+        ]
       );
       
       return id;
@@ -83,16 +114,32 @@ class RideStorageService {
         ORDER BY timestamp DESC
       `) as RideRow[];
       
-      return result.map(row => ({
-        id: row.id,
-        timestamp: row.timestamp,
-        distance: row.distance,
-        duration: row.duration,
-        averageSpeed: row.averageSpeed,
-        aiSummary: row.aiSummary || undefined,
-        createdAt: new Date(row.createdAt),
-        updatedAt: new Date(row.updatedAt),
-      }));
+      return result.map(row => {
+        let routePoints: LocationPoint[] | undefined;
+        
+        // Parse route points from JSON
+        if (row.routePoints) {
+          try {
+            routePoints = JSON.parse(row.routePoints);
+          } catch (error) {
+            console.warn('Failed to parse route points for ride:', row.id);
+            routePoints = undefined;
+          }
+        }
+        
+        return {
+          id: row.id,
+          timestamp: row.timestamp,
+          distance: row.distance,
+          duration: row.duration,
+          averageSpeed: row.averageSpeed,
+          maxSpeed: row.maxSpeed || undefined,
+          routePoints,
+          aiSummary: row.aiSummary || undefined,
+          createdAt: new Date(row.createdAt),
+          updatedAt: new Date(row.updatedAt),
+        };
+      });
     } catch (error) {
       console.error('Failed to get rides:', error);
       throw error;
@@ -110,12 +157,26 @@ class RideStorageService {
       
       if (!result) return null;
       
+      let routePoints: LocationPoint[] | undefined;
+      
+      // Parse route points from JSON
+      if (result.routePoints) {
+        try {
+          routePoints = JSON.parse(result.routePoints);
+        } catch (error) {
+          console.warn('Failed to parse route points for ride:', result.id);
+          routePoints = undefined;
+        }
+      }
+      
       return {
         id: result.id,
         timestamp: result.timestamp,
         distance: result.distance,
         duration: result.duration,
         averageSpeed: result.averageSpeed,
+        maxSpeed: result.maxSpeed || undefined,
+        routePoints,
         aiSummary: result.aiSummary || undefined,
         createdAt: new Date(result.createdAt),
         updatedAt: new Date(result.updatedAt),

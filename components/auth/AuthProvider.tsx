@@ -29,9 +29,14 @@ export default function AuthProvider({ children }: AuthProviderProps) {
   // Show loading screen while determining auth state
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center bg-white dark:bg-gray-900">
-        <ActivityIndicator size="large" color="#3B82F6" />
-        <Text className="mt-4 text-gray-600 dark:text-gray-400">Loading...</Text>
+      <View className="flex-1 justify-center items-center bg-gray-50 dark:bg-gray-900">
+        <View className="items-center">
+          <View className="w-20 h-20 bg-orange-500 rounded-full items-center justify-center mb-6">
+            <Text className="text-2xl">🚴‍♀️</Text>
+          </View>
+          <ActivityIndicator size="large" color="#FF6B35" />
+          <Text className="mt-4 text-gray-600 dark:text-gray-400 text-base">Loading...</Text>
+        </View>
       </View>
     );
   }

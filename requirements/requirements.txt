@@ -1,0 +1,79 @@
+== Project Overview
+
+Cyclora is a lightweight, energy-efficient road cycling tracker app for iOS, built in React Native with native Swift integrations. It is designed to provide cyclists with reliable ride tracking, basic health insights, and intelligent post-ride summaries through AI.
+
+The base version focuses on core functionality:
+* Start and stop outdoor cycling rides
+* Record distance, time, and speed using GPS
+* Persist ride data locally on the device
+* Generate a simple AI-based ride summary after ride completion
+
+Later versions will introduce features like live heart rate from Apple Watch, detailed route maps, elevation tracking, and structured training plans.
+
+The app prioritizes:
+- Energy efficiency (battery-safe background tracking)
+- Data privacy (all health data is processed on-device or anonymized)
+- Offline functionality (full ride tracking and storage without needing internet)
+
+== Feature Requirements
+
+=== FR-1: Start and Stop Ride Tracking
+- Users can press a "Start Ride" button to begin tracking.
+- Users can press a "Stop Ride" button to end a ride.
+- The app must track:
+  * Total elapsed time (in seconds)
+  * Distance traveled (in kilometers)
+  * Average speed (in km/h)
+- Data must be recorded even if the app is minimized or the screen is locked.
+- GPS polling should be optimized to preserve battery: update every 3–5 seconds or ≥15m change in position.
+
+=== FR-2: Save and Persist Ride Data
+- Upon stopping a ride, the ride data (distance, duration, speed) must be saved locally.
+- Each ride record must include:
+  * UUID
+  * ISO timestamp
+  * Distance (float, km)
+  * Duration (integer, seconds)
+  * Average speed (float, km/h)
+- Data should be stored in a performant, persistent local storage system (MMKV or SQLite).
+
+=== FR-3: View Ride History
+- Users can view a scrollable list of their past rides.
+- Each list item must show the ride date, duration, and distance.
+- Tapping a ride opens a detail screen with the full ride summary.
+
+=== FR-4: AI Ride Summary (Basic)
+- After a ride is completed, the app generates a brief, encouraging summary using an AI model (OpenAI API or mock).
+- The app must:
+  * Send ride stats to the AI (distance, time, avg speed)
+  * Receive and display a text summary ≤60 words
+  * Store the summary with the ride record
+- In offline mode, the request is queued and retried once the user reconnects.
+
+== Current File Structure
+cyclora/
+├── .expo/
+│   └── types/
+├── .vscode/
+├── app/
+│   └── (tabs)/
+├── assets/
+│   ├── fonts/
+│   └── images/
+├── components/
+│   └── ui/
+├── constants/
+├── hooks/
+├── node_modules/
+├── requirements/
+│   └── requirements.txt
+├── scripts/
+├── .gitignore
+├── app.json
+├── eslint.config.js
+├── expo-env.d.ts
+├── package-lock.json
+├── package.json
+├── README.md
+└── tsconfig.json
+

@@ -1,50 +1,192 @@
-# Welcome to your Expo app 👋
+# Cyclora - Cycling Tracking App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A modern React Native cycling tracking application built with Expo, featuring GPS-based ride tracking, local data storage, and AI-powered ride summaries.
 
-## Get started
+## Features
 
-1. Install dependencies
+### 🚴‍♀️ Core Functionality
+- **GPS Ride Tracking**: Real-time tracking of cycling rides with distance, duration, and speed metrics
+- **Energy-Efficient Location Services**: Optimized GPS settings to preserve battery life
+- **Offline-First Storage**: Local SQLite database for reliable data persistence
+- **AI-Powered Summaries**: Automatic generation of encouraging ride summaries using OpenAI
 
-   ```bash
-   npm install
-   ```
+### 📱 User Experience
+- **Modern UI/UX**: Clean, responsive design with dark mode support
+- **Real-Time Stats**: Live display of current speed, distance, and duration
+- **Ride History**: Comprehensive view of past rides with detailed statistics
+- **Smart Notifications**: Toast notifications for ride events and system messages
 
-2. Start the app
+### 🛠️ Technical Features
+- **Cross-Platform**: Runs on iOS, Android, and Web
+- **TypeScript**: Full type safety throughout the application
+- **State Management**: Zustand for efficient global state management
+- **Data Fetching**: TanStack React Query for optimized API calls
+- **Styling**: NativeWind (Tailwind CSS) for consistent design
 
-   ```bash
-   npx expo start
-   ```
+## Tech Stack
 
-In the output, you'll find options to open the app in a
+- **Framework**: React Native with Expo
+- **Navigation**: Expo Router (file-based routing)
+- **Styling**: NativeWind (Tailwind CSS for React Native)
+- **State Management**: Zustand
+- **Data Fetching**: TanStack React Query
+- **Database**: Expo SQLite
+- **Location Services**: Expo Location
+- **AI Integration**: OpenAI API
+- **Language**: TypeScript
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Getting Started
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### Prerequisites
+- Node.js (v18 or later)
+- npm or yarn
+- Expo CLI
+- iOS Simulator (for iOS development)
+- Android Studio (for Android development)
 
-## Get a fresh project
+### Installation
 
-When you're ready, run:
-
+1. Clone the repository:
 ```bash
-npm run reset-project
+git clone <repository-url>
+cd cyclora
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+2. Install dependencies:
+```bash
+npm install
+```
 
-## Learn more
+3. Start the development server:
+```bash
+npm start
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+4. Run on your preferred platform:
+```bash
+# iOS
+npm run ios
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+# Android
+npm run android
 
-## Join the community
+# Web
+npm run web
+```
 
-Join our community of developers creating universal apps.
+## Configuration
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### AI Summaries (Optional)
+To enable AI-powered ride summaries, you'll need to configure an OpenAI API key:
+
+1. Get an API key from [OpenAI](https://platform.openai.com/api-keys)
+2. In the app, the AI service will use mock summaries by default
+3. To use real AI summaries, you can set the API key in the `aiSummaryService.setApiKey()` method
+
+### Location Permissions
+The app requires location permissions to track rides:
+- **iOS**: Location permissions are requested automatically
+- **Android**: Location permissions are requested automatically
+- **Background Location**: Optional for continued tracking when app is backgrounded
+
+## Project Structure
+
+```
+cyclora/
+├── app/                    # Expo Router pages
+│   ├── (tabs)/            # Tab navigation screens
+│   │   ├── index.tsx      # Ride tracking screen
+│   │   └── explore.tsx    # Ride history screen
+│   └── _layout.tsx        # Root layout with providers
+├── components/            # React components
+│   ├── ui/               # Reusable UI components
+│   ├── RideTracker.tsx   # Main ride tracking component
+│   └── RideHistory.tsx   # Ride history component
+├── hooks/                # Custom React hooks
+│   └── useAppStore.ts    # Zustand store
+├── services/             # Business logic services
+│   ├── rideTracker.ts    # GPS tracking service
+│   ├── rideStorage.ts    # SQLite storage service
+│   └── aiSummary.ts      # AI summary service
+├── types/                # TypeScript type definitions
+│   └── ride.ts           # Ride-related types
+└── constants/            # App constants
+```
+
+## Key Components
+
+### RideTracker
+The main tracking interface that displays:
+- Real-time ride statistics
+- Start/Stop ride controls
+- GPS status indicator
+- Large, easy-to-read metrics display
+
+### RideHistory
+Displays past rides with:
+- Chronological list of completed rides
+- Summary statistics (total rides, distance, average speed)
+- AI-generated ride summaries
+- Delete functionality (long press)
+
+### Services
+
+#### RideTrackerService
+- Manages GPS location tracking
+- Calculates distance using Haversine formula
+- Provides real-time speed and duration updates
+- Handles location permissions
+
+#### RideStorageService
+- SQLite database operations
+- CRUD operations for ride records
+- Data persistence and retrieval
+- Statistics calculations
+
+#### AISummaryService
+- OpenAI API integration
+- Offline queue for failed requests
+- Fallback to mock summaries
+- Encouraging, coach-like messaging
+
+## Development
+
+### Code Style
+- ESLint and Prettier configured
+- TypeScript strict mode enabled
+- Functional components with hooks
+- Consistent naming conventions
+
+### Testing
+```bash
+npm run lint
+```
+
+### Building for Production
+```bash
+# Build for all platforms
+expo build
+
+# Platform-specific builds
+expo build:ios
+expo build:android
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- Built with [Expo](https://expo.dev/)
+- UI components inspired by modern fitness apps
+- Location tracking optimized for cycling use cases
+- AI summaries powered by OpenAI
